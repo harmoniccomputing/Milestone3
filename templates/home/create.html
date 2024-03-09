@@ -1,0 +1,181 @@
+{% extends 'home/layout.html' %}
+
+{% block title %}Create Video{% endblock %}
+
+{% block content %}
+<h2>Create Your Video</h2>
+<p>Use your uploaded images and audio to create a video.</p>
+
+<!-- Image gallery with selection -->
+<div class="gallery" style="display: flex; flex-wrap: wrap; gap: 10px;">
+    {% for image in images %}
+    <div class="image-container" data-image-id="{{ image.image_id }}"
+        style="cursor: pointer; border: 2px solid transparent; text-align: center;">
+        <img src="{{ url_for('serve_image', image_id=image.image_id) }}" alt="{{ image.image_name }}"
+            style="max-width: 100px; max-height: 100px;">
+        <p>{{ image.image_name }}</p>
+        <input type="number" class="image-duration" placeholder="Duration (s)" min="1" style="width: 80%;">
+    </div>
+    {% endfor %}
+</div>
+<!-- Place this button where appropriate in your HTML layout -->
+<!-- <button id="previewButton" type="button" class="btn btn-info">See Video Preview</button>
+
+<div id="video-preview-container" style="margin-top: 20px; margin-bottom: 20px;">
+    <h2>Video Preview</h2>
+    <video id="video-preview" width="640" height="360" controls muted></video>
+</div> -->
+
+<!-- Audio selection -->
+<h3>Select an Audio Track for Your Video</h3>
+<div class="audio-library">
+    {% for audio in audio_files %}
+    <div class="audio-container" data-audio-id="{{ audio.audio_id }}" style="cursor: pointer; margin-bottom: 10px;">
+        <audio controls>
+            <source src="{{ url_for('serve_audio', audio_id=audio.audio_id) }}" type="audio/mpeg">
+            Your browser does not support the audio element.
+        </audio>
+        <label>
+            <input type="radio" name="audioRadio" class="audio-radio" value="{{ audio.audio_id }}">
+            {{ audio.audio_name }}
+        </label>
+    </div>
+    {% endfor %}
+</div>
+
+
+<!-- Video creation form -->
+
+<form method="post" action="{{ url_for('create') }}" enctype="multipart/form-data" id="videoCreationForm">
+    {{ form.hidden_tag() }}
+    {{ form.videoTitle.label(class="form-label") }}
+    {{ form.videoTitle(class="form-control") }}
+    {% if form.videoTitle.errors %}
+    <div class="alert alert-danger">{{ form.videoTitle.errors[0] }}</div>
+    {% endif %}
+    {{ form.videoDescription.label(class="form-label") }}
+    {{ form.videoDescription(class="form-control") }}
+
+    <!-- Resolution selection -->
+    <label for="resolution">Video Resolution:</label>
+    <select name="resolution" id="resolution">
+        <option value="480">480p</option>
+        <option value="720">720p HD</option>
+        <option value="1080">1080p Full HD</option>
+        <option value="2160">4K UHD</option>
+    </select>
+
+    <!-- Quality selection -->
+    <label for="quality">Video Quality:</label>
+    <select name="quality" id="quality">
+        <option value="low">Low</option>
+        <option value="medium">Medium</option>
+        <option value="high">High</option>
+    </select>
+
+    <!-- Hidden inputs to store selections -->
+    <input type="hidden" name="selected_images" id="selectedImages">
+    <input type="hidden" name="selectedAudio" id="selectedAudio">
+
+    <button type="submit" class="btn btn-primary">Create Video</button>
+</form>
+<!-- Video display section -->
+{% if video_path %}
+<h2>Video Preview</h2>
+<video id="created-video" width="640" height="360" controls>
+    <source src="{{ url_for('static', filename=video_path) }}" type="video/mp4">
+    Your browser does not support the video tag.
+</video>
+{% endif %}
+
+{% if video_path %}
+<div class="download-button">
+    <a href="{{ url_for('static', filename=video_path) }}" download="{{ video_title }}.mp4"
+        class="btn btn-primary mt-3">
+        Download Video
+    </a>
+</div>
+{% endif %}
+
+<a href="{{ url_for('home') }}" class="btn btn-secondary mt-3">Back to Home</a>
+<input type="hidden" id="imageBaseUrl" value="{{ url_for('serve_image', image_id=0)[:-1] }}">
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const selectedImages = [];
+        const selectedAudios = [];
+        
+        const videoPreview = document.getElementById('video-preview');
+        const imageBaseUrl = document.getElementById('imageBaseUrl').value;
+        function updateVideoPreview() {
+            // Clear any previous content
+            videoPreview.innerHTML = '';
+            let currentIndex = 0;
+
+            function displayImage(index) {
+                if (index < selectedImages.length) {
+                    const imageInfo = selectedImages[index];
+                    const imageId = imageInfo.id;
+                    const duration = parseInt(imageInfo.duration, 10) || 5; // Default to 5 seconds
+
+                    const imageElement = document.createElement('img');
+                    const imageUrl = imageBaseUrl + imageId;
+                    imageElement.src = imageUrl;
+                    imageElement.style.width = '100%'; // Set width to 100% to fit the video container
+
+                    if (videoPreview.firstChild) {
+                        videoPreview.removeChild(videoPreview.firstChild);
+                    }
+                    videoPreview.appendChild(imageElement);
+
+                    setTimeout(() => {
+                        currentIndex++;
+                        displayImage(currentIndex);
+                    }, duration * 1000);
+                }
+            }
+
+            displayImage(0);
+        }
+
+        //document.getElementById('previewButton').addEventListener('click', updateVideoPreview);
+
+        document.querySelectorAll('.gallery .image-container').forEach(imageContainer => {
+            imageContainer.addEventListener('click', function () {
+                const imageId = this.getAttribute('data-image-id');
+                const durationInput = this.querySelector('.image-duration');
+                const duration = durationInput.value || '5';
+
+                const imageIndex = selectedImages.findIndex(image => image.id === imageId);
+                if (imageIndex > -1) {
+                    selectedImages.splice(imageIndex, 1);
+                    this.style.border = "2px solid transparent";
+                } else {
+                    selectedImages.push({ id: imageId, duration: duration });
+                    this.style.border = "2px solid #007bff";
+                }
+
+                document.getElementById('selectedImages').value = JSON.stringify(selectedImages);
+            });
+        });
+
+        document.querySelectorAll('.audio-library .audio-container').forEach(audioContainer => {
+            audioContainer.addEventListener('click', function () {
+                const audioId = this.getAttribute('data-audio-id');
+                document.getElementById('selectedAudio').value = audioId;
+                document.querySelectorAll('.audio-library .audio-container').forEach(container => {
+                    container.classList.remove('selected');
+                });
+                this.classList.add('selected');
+            });
+        });
+
+        document.querySelectorAll('.audio-radio').forEach(radio => {
+            radio.addEventListener('change', function () {
+                document.getElementById('selectedAudio').value = this.value;
+            });
+        });
+    });
+</script>
+
+{% endblock %}

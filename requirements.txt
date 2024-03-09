@@ -1,0 +1,16 @@
+click
+Flask
+Flask-MySQLdb
+itsdangerous
+Jinja2
+MarkupSafe
+mysqlclient
+Werkzeug
+moviepy
+opencv-python-headless
+numpy
+Flask-Bcrypt
+Flask-JWT-Extended
+mysql-connector-python
+WTForms
+Flask-WTF

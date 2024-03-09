@@ -1,0 +1,70 @@
+{% extends 'home/layout.html' %}
+
+{% block content %}
+<div class="container mt-5">
+  <h2>Upload Images</h2>
+  <form id="upload-form" action="{{ url_for('upload_file') }}" method="post" enctype="multipart/form-data">
+    {{ form.hidden_tag() }}
+    {{ form.csrf_token }}
+    {{ form.file.label(class="form-label") }} {{ form.file(class="form-control") }}
+    <input type="hidden" name="user_id" id="user_id" value="{{ session['id'] if 'id' in session else '' }}">
+    <button type="submit" class="btn btn-primary mt-3">Save Images</button>
+  </form>
+  <div id="file-preview" class="mt-3">
+    <p>No files currently selected for upload.</p>
+  </div>
+</div>
+<a href="{{ url_for('create') }}" class="btn btn-secondary mt-3">Create a Video</a>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.7.0/dropzone.min.js"></script>
+<script>
+  
+  Dropzone.autoDiscover = false;
+  
+  var myDropzone = new Dropzone("#upload-form", {
+    url: "{{ url_for('upload_file') }}",
+    autoProcessQueue: false, 
+    uploadMultiple: true, 
+    parallelUploads: 100, 
+    maxFiles: 100,
+    addRemoveLinks: true, 
+    dictRemoveFile: "Remove file", 
+    dictDefaultMessage: "Drag images here or click to select images", 
+    init: function() {
+      var submitButton = document.querySelector("#submit-all");
+      var myDropzone = this; 
+
+      submitButton.addEventListener("click", function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (myDropzone.getQueuedFiles().length > 0) {
+          myDropzone.processQueue(); 
+        } else {
+          alert("Please select files to upload.");
+        }
+      });
+
+      this.on("queuecomplete", function() {
+        if (this.getAcceptedFiles().length > 0) {
+          alert("All files have been uploaded successfully.");
+        }
+        location.reload(); 
+      });
+
+      this.on("addedfile", function(file) {
+        var filePreview = document.getElementById("file-preview");
+        file.previewElement = Dropzone.createElement('<div>' + file.name + '</div>');
+        filePreview.appendChild(file.previewElement);
+      });
+
+      // Handle removed file
+      this.on("removedfile", function(file) {
+        if (file.previewElement != null && file.previewElement.parentNode != null) {
+          file.previewElement.parentNode.removeChild(file.previewElement);
+        }
+      });
+    }
+  });
+</script>
+
+{% endblock %}

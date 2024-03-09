@@ -1,0 +1,25 @@
+{% extends 'home/layout.html' %}
+
+{% block title %}Home Page{% endblock %}
+
+{% block content %}
+<h2>Home Page</h2>
+<p>Welcome back, {{ username }}!</p>
+
+<!-- Image Gallery -->
+<div class="gallery" style="display: flex; flex-wrap: wrap; gap: 10px;">
+  {% for image in images %}
+  <div class="image-container" style="margin-bottom: 10px;">
+    <img src="{{ url_for('serve_image', image_id=image.image_id) }}" alt="{{ image.image_name }}" style="max-width: 100px; max-height: 100px;">
+    <p>{{ image.image_name }}</p>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Buttons -->
+<div class="actions">
+  <a href="{{ url_for('upload_file') }}" class="btn btn-primary">Upload Images</a>
+  <a href="{{ url_for('create') }}" class="btn btn-secondary">Create a Video</a>
+</div>
+
+{% endblock %}

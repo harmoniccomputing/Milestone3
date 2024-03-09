@@ -1,0 +1,24 @@
+{% extends 'home/layout.html' %}
+
+{% block title %}Video Preview{% endblock %}
+
+{% block content %}
+<h2>Video Preview</h2>
+<p>Here is the video you created:</p>
+
+<!-- Display video title and description -->
+<div class="video-details">
+  <h3>{{ video_title }}</h3>
+  <p>{{ video_description }}</p>
+</div>
+
+
+<div class="video-player">
+  <video controls width="640" height="480">
+    <source src="{{ url_for('static', filename=video_path) }}" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+</div>
+
+<a href="{{ url_for('home') }}" class="btn btn-secondary mt-3">Back to Home</a>
+{% endblock %}

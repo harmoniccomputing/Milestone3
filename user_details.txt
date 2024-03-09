@@ -1,0 +1,51 @@
+Commands to see user image details:
+1. Details of All Users:
+SELECT * FROM accounts;
+
+2. Number of Images Per User:
+SELECT 
+  accounts.username, 
+  COUNT(images.image_id) AS number_of_images
+FROM 
+  accounts
+JOIN 
+  images ON accounts.id = images.user_id
+GROUP BY 
+  accounts.username;
+
+3. Length of Image Paths Per User
+SELECT 
+  accounts.username, 
+  images.image_path, 
+  CHAR_LENGTH(images.image_path) AS path_length
+FROM 
+  accounts
+JOIN 
+  images ON accounts.id = images.user_id;
+
+4. Comprehensive Information Per User
+SELECT 
+  accounts.id,
+  accounts.username, 
+  accounts.email,
+  COUNT(images.image_id) AS number_of_images, 
+  AVG(CHAR_LENGTH(images.image_path)) AS avg_path_length
+FROM 
+  accounts
+LEFT JOIN 
+  images ON accounts.id = images.user_id
+GROUP BY 
+  accounts.id;
+
+
+5. Displaying Binary Data Size
+SELECT 
+  accounts.username, 
+  images.image_id, 
+  OCTET_LENGTH(images.image) AS image_size_in_bytes
+FROM 
+  accounts
+JOIN 
+  images ON accounts.id = images.user_id;
+6. Display data for audio library
+SELECT audio_id, audio_name, OCTET_LENGTH(audio_blob) as blob_length, audio_path, metadata, uploaded_at FROM audio_library;
